@@ -61,7 +61,7 @@ Credits
     If you like this project give your support to original author of this project by giving github star to author's project
 
 - try project on google colab
-    * [link to colab version](https://colab.research.google.com/github/AliaksandrSiarohin/first-order-model/blob/master/demo.ipynb)
+    * [link to colab version](https://colab.research.google.com/github/hoangmanhkhiem/Image_Animation/blob/main/demo.ipynb)
 
     For any valueable feedback feel free to contact me on [linkedin](https://www.linkedin.com/in/hoangmanhkhiem/)
 
