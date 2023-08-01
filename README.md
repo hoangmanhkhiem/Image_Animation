@@ -57,7 +57,7 @@ Credits
 #### Author  : Hoang Manh Khiem
 - Original Project
     * [AliaksandrSiarohin](https://github.com/AliaksandrSiarohin/first-order-model)
-    * 
+      
     If you like this project give your support to original author of this project by giving github star to author's project
 
 - try project on google colab
