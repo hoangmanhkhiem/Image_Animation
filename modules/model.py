@@ -46,8 +46,7 @@ class Vgg19(torch.nn.Module):
         h_relu3 = self.slice3(h_relu2)
         h_relu4 = self.slice4(h_relu3)
         h_relu5 = self.slice5(h_relu4)
-        out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
-        return out
+        return [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
 
 
 class ImagePyramide(torch.nn.Module):
@@ -56,16 +55,19 @@ class ImagePyramide(torch.nn.Module):
     """
     def __init__(self, scales, num_channels):
         super(ImagePyramide, self).__init__()
-        downs = {}
-        for scale in scales:
-            downs[str(scale).replace('.', '-')] = AntiAliasInterpolation2d(num_channels, scale)
+        downs = {
+            str(scale).replace('.', '-'): AntiAliasInterpolation2d(
+                num_channels, scale
+            )
+            for scale in scales
+        }
         self.downs = nn.ModuleDict(downs)
 
     def forward(self, x):
-        out_dict = {}
-        for scale, down_module in self.downs.items():
-            out_dict['prediction_' + str(scale).replace('-', '.')] = down_module(x)
-        return out_dict
+        return {
+            'prediction_' + str(scale).replace('-', '.'): down_module(x)
+            for scale, down_module in self.downs.items()
+        }
 
 
 class Transform:
@@ -116,8 +118,7 @@ class Transform:
         new_coordinates = self.warp_coordinates(coordinates)
         grad_x = grad(new_coordinates[..., 0].sum(), coordinates, create_graph=True)
         grad_y = grad(new_coordinates[..., 1].sum(), coordinates, create_graph=True)
-        jacobian = torch.cat([grad_x[0].unsqueeze(-2), grad_y[0].unsqueeze(-2)], dim=-2)
-        return jacobian
+        return torch.cat([grad_x[0].unsqueeze(-2), grad_y[0].unsqueeze(-2)], dim=-2)
 
 
 def detach_kp(kp):
@@ -163,8 +164,8 @@ class GeneratorFullModel(torch.nn.Module):
         if sum(self.loss_weights['perceptual']) != 0:
             value_total = 0
             for scale in self.scales:
-                x_vgg = self.vgg(pyramide_generated['prediction_' + str(scale)])
-                y_vgg = self.vgg(pyramide_real['prediction_' + str(scale)])
+                x_vgg = self.vgg(pyramide_generated[f'prediction_{str(scale)}'])
+                y_vgg = self.vgg(pyramide_real[f'prediction_{str(scale)}'])
 
                 for i, weight in enumerate(self.loss_weights['perceptual']):
                     value = torch.abs(x_vgg[i] - y_vgg[i].detach()).mean()
@@ -176,7 +177,7 @@ class GeneratorFullModel(torch.nn.Module):
             discriminator_maps_real = self.discriminator(pyramide_real, kp=detach_kp(kp_driving))
             value_total = 0
             for scale in self.disc_scales:
-                key = 'prediction_map_%s' % scale
+                key = f'prediction_map_{scale}'
                 value = ((1 - discriminator_maps_generated[key]) ** 2).mean()
                 value_total += self.loss_weights['generator_gan'] * value
             loss_values['gen_gan'] = value_total
@@ -184,7 +185,7 @@ class GeneratorFullModel(torch.nn.Module):
             if sum(self.loss_weights['feature_matching']) != 0:
                 value_total = 0
                 for scale in self.disc_scales:
-                    key = 'feature_maps_%s' % scale
+                    key = f'feature_maps_{scale}'
                     for i, (a, b) in enumerate(zip(discriminator_maps_real[key], discriminator_maps_generated[key])):
                         if self.loss_weights['feature_matching'][i] == 0:
                             continue
@@ -248,12 +249,9 @@ class DiscriminatorFullModel(torch.nn.Module):
         discriminator_maps_generated = self.discriminator(pyramide_generated, kp=detach_kp(kp_driving))
         discriminator_maps_real = self.discriminator(pyramide_real, kp=detach_kp(kp_driving))
 
-        loss_values = {}
         value_total = 0
         for scale in self.scales:
-            key = 'prediction_map_%s' % scale
+            key = f'prediction_map_{scale}'
             value = (1 - discriminator_maps_real[key]) ** 2 + discriminator_maps_generated[key] ** 2
             value_total += self.loss_weights['discriminator_gan'] * value.mean()
-        loss_values['disc_gan'] = value_total
-
-        return loss_values
+        return {'disc_gan': value_total}

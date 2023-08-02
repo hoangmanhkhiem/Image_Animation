@@ -41,7 +41,10 @@ class OcclusionAwareGenerator(nn.Module):
         self.bottleneck = torch.nn.Sequential()
         in_features = min(max_features, block_expansion * (2 ** num_down_blocks))
         for i in range(num_bottleneck_blocks):
-            self.bottleneck.add_module('r' + str(i), ResBlock2d(in_features, kernel_size=(3, 3), padding=(1, 1)))
+            self.bottleneck.add_module(
+                f'r{str(i)}',
+                ResBlock2d(in_features, kernel_size=(3, 3), padding=(1, 1)),
+            )
 
         self.final = nn.Conv2d(block_expansion, num_channels, kernel_size=(7, 7), padding=(3, 3))
         self.estimate_occlusion_map = estimate_occlusion_map

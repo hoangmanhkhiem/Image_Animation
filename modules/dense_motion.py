@@ -63,8 +63,7 @@ class DenseMotionNetwork(nn.Module):
 
         #adding background feature
         identity_grid = identity_grid.repeat(bs, 1, 1, 1, 1)
-        sparse_motions = torch.cat([identity_grid, driving_to_source], dim=1)
-        return sparse_motions
+        return torch.cat([identity_grid, driving_to_source], dim=1)
 
     def create_deformed_source_image(self, source_image, sparse_motions):
         """
@@ -84,12 +83,10 @@ class DenseMotionNetwork(nn.Module):
 
         bs, _, h, w = source_image.shape
 
-        out_dict = dict()
         heatmap_representation = self.create_heatmap_representations(source_image, kp_driving, kp_source)
         sparse_motion = self.create_sparse_motions(source_image, kp_driving, kp_source)
         deformed_source = self.create_deformed_source_image(source_image, sparse_motion)
-        out_dict['sparse_deformed'] = deformed_source
-
+        out_dict = {'sparse_deformed': deformed_source}
         input = torch.cat([heatmap_representation, deformed_source], dim=2)
         input = input.view(bs, -1, h, w)
 

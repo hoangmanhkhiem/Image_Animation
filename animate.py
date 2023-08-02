@@ -22,7 +22,7 @@ def normalize_kp(kp_source, kp_driving, kp_driving_initial, adapt_movement_scale
     else:
         adapt_movement_scale = 1
 
-    kp_new = {k: v for k, v in kp_driving.items()}
+    kp_new = dict(kp_driving.items())
 
     if use_relative_movement:
         kp_value_diff = (kp_driving['value'] - kp_driving_initial['value'])
@@ -95,7 +95,10 @@ def animate(config, generator, kp_detector, checkpoint, log_dir, dataset):
 
             predictions = np.concatenate(predictions, axis=1)
             result_name = "-".join([x['driving_name'][0], x['source_name'][0]])
-            imageio.imsave(os.path.join(png_dir, result_name + '.png'), (255 * predictions).astype(np.uint8))
+            imageio.imsave(
+                os.path.join(png_dir, f'{result_name}.png'),
+                (255 * predictions).astype(np.uint8),
+            )
 
             image_name = result_name + animate_params['format']
             imageio.mimsave(os.path.join(log_dir, image_name), visualizations)

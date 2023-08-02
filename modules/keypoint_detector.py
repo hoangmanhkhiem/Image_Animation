@@ -42,9 +42,7 @@ class KPDetector(nn.Module):
         heatmap = heatmap.unsqueeze(-1)
         grid = make_coordinate_grid(shape[2:], heatmap.type()).unsqueeze_(0).unsqueeze_(0)
         value = (heatmap * grid).sum(dim=(2, 3))
-        kp = {'value': value}
-
-        return kp
+        return {'value': value}
 
     def forward(self, x):
         if self.scale_factor != 1:
